@@ -29,7 +29,7 @@ class _CsvLineChartState extends State<CsvLineChart> {
           }
         }
 
-        int maxVisiblePoints = 50; // Number of points visible at a time
+        int maxVisiblePoints = 100; // Number of points visible at a time
         int maxPoints = data.length - 1;
 
         return Column(
