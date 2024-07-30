@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,7 +14,13 @@ class CsvLineChart extends StatefulWidget {
 class _CsvLineChartState extends State<CsvLineChart> {
   List<int?> selectedVariables =
       List.filled(5, null); // Default selected variables to None
-  List<Color> _lineColors = [];
+  List<Color> _lineColors = [
+    Color.fromARGB(255, 255, 0, 0), // Bright Red
+    Color.fromARGB(255, 0, 255, 0), // Bright Green
+    Color.fromARGB(255, 0, 255, 255), // Bright Cyan
+    Color.fromARGB(255, 255, 255, 0), // Bright Yellow
+    Color.fromARGB(255, 255, 0, 255), // Bright Magenta
+  ];
   double _sliderValue = 0.0;
 
   @override
@@ -86,55 +94,57 @@ class _CsvLineChartState extends State<CsvLineChart> {
                     Expanded(
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: Container(
-                          width: (maxPoints + 1) *
-                              20.0, // Adjust the width based on the data length
-                          height: 400, // Set a fixed height for the chart
-                          color: Colors.black, // Set background color to black
-                          child: LineChart(
-                            LineChartData(
-                              backgroundColor: Colors
-                                  .black, // Set the background color of the chart
-                              titlesData: FlTitlesData(
-                                leftTitles: SideTitles(
-                                  showTitles: false,
+                        child: GestureDetector(
+                          onTapUp: (details) {
+                            double halfWidth =
+                                MediaQuery.of(context).size.width / 2;
+                            if (details.localPosition.dx > halfWidth) {
+                              setState(() {
+                                _sliderValue = min(
+                                    _sliderValue + 10, maxPoints.toDouble());
+                              });
+                            } else {
+                              setState(() {
+                                _sliderValue = max(_sliderValue - 10, 0);
+                              });
+                            }
+                          },
+                          child: Container(
+                            width: (maxPoints + 1) *
+                                20.0, // Adjust the width based on the data length
+                            height: 400, // Set a fixed height for the chart
+                            color:
+                                Colors.black, // Set background color to black
+                            child: LineChart(
+                              LineChartData(
+                                backgroundColor: Colors
+                                    .black, // Set the background color of the chart
+                                titlesData: FlTitlesData(
+                                  leftTitles: SideTitles(
+                                    showTitles: false,
+                                  ),
+                                  bottomTitles: SideTitles(
+                                    showTitles: true,
+                                    getTextStyles: (value) =>
+                                        const TextStyle(color: Colors.white),
+                                  ),
                                 ),
-                                bottomTitles: SideTitles(
-                                  showTitles: true,
-                                  getTextStyles: (value) =>
-                                      const TextStyle(color: Colors.white),
+                                gridData: FlGridData(
+                                  show: false, // Disable grid lines
                                 ),
-                              ),
-                              gridData: FlGridData(
-                                show: false, // Disable grid lines
-                              ),
-                              lineBarsData: _getLineChartBarData(
-                                  data, _sliderValue, maxVisiblePoints),
-                              borderData: FlBorderData(
-                                show: true,
-                                border:
-                                    Border.all(color: Colors.grey, width: 1),
-                              ),
-                              minX: _sliderValue,
-                              maxX: _sliderValue + maxVisiblePoints,
-                              minY: minY,
-                              maxY: maxY,
-                              lineTouchData: LineTouchData(
-                                enabled: false,
-                                touchTooltipData: LineTouchTooltipData(
-                                  tooltipBgColor: Colors.white,
-                                  getTooltipItems:
-                                      (List<LineBarSpot> touchedSpots) {
-                                    return touchedSpots.map((spot) {
-                                      final variableIndex = selectedVariables[
-                                          _sliderValue.toInt()];
-                                      final label = data[0][variableIndex!];
-                                      return LineTooltipItem(
-                                        '$label: ${spot.y}',
-                                        const TextStyle(color: Colors.black),
-                                      );
-                                    }).toList();
-                                  },
+                                lineBarsData: _getLineChartBarData(
+                                    data, _sliderValue, maxVisiblePoints),
+                                borderData: FlBorderData(
+                                  show: true,
+                                  border:
+                                      Border.all(color: Colors.grey, width: 1),
+                                ),
+                                minX: _sliderValue,
+                                maxX: _sliderValue + maxVisiblePoints,
+                                minY: minY,
+                                maxY: maxY,
+                                lineTouchData: LineTouchData(
+                                  enabled: false, // Disable touch events
                                 ),
                               ),
                             ),
@@ -144,23 +154,11 @@ class _CsvLineChartState extends State<CsvLineChart> {
                     ),
                   ],
                 ),
-                Slider(
-                  value: _sliderValue,
-                  min: 0,
-                  max: (maxPoints - maxVisiblePoints).toDouble(),
-                  divisions: (maxPoints - maxVisiblePoints),
-                  label: _sliderValue.round().toString(),
-                  onChanged: (double value) {
-                    setState(() {
-                      _sliderValue = value;
-                    });
-                  },
-                ),
               ],
             ),
             Positioned(
               top: 10,
-              left: 10,
+              right: 10,
               child: Container(
                 color: Colors.white.withOpacity(0.8),
                 padding: EdgeInsets.all(8),
@@ -213,7 +211,7 @@ class _CsvLineChartState extends State<CsvLineChart> {
           isCurved: false, // Set to false to make the lines straight
           barWidth: 2,
           dotData: FlDotData(show: false),
-          colors: [_lineColors[variableIndex - 1]],
+          colors: [_lineColors[i]],
           belowBarData: BarAreaData(show: false),
         ),
       );
