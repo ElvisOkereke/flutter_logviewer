@@ -1,8 +1,8 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
 
 Future<String?> pickFile() async {
-  final result = await FilePicker.platform.pickFiles();
+  final result = await FilePicker.platform
+      .pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
   if (result != null) {
     return result.files.single.path;
   }

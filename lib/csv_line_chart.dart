@@ -3,39 +3,42 @@ import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:random_color/random_color.dart';
 import 'csv_cubit.dart';
+import 'normilize.dart';
 
 class CsvLineChart extends StatefulWidget {
   @override
   _CsvLineChartState createState() => _CsvLineChartState();
 }
+//Features to add:
+//1. Calculated Fields
+//2. data legend min/max values
+//3. color match lines and data legend
+//4. add cursor to chart
 
 class _CsvLineChartState extends State<CsvLineChart> {
   List<int?> selectedVariables =
       List.filled(5, null); // Default selected variables to None
-  List<Color> _lineColors = [
-    Color.fromARGB(255, 255, 0, 0), // Bright Red
-    Color.fromARGB(255, 0, 255, 0), // Bright Green
-    Color.fromARGB(255, 0, 255, 255), // Bright Cyan
-    Color.fromARGB(255, 255, 255, 0), // Bright Yellow
-    Color.fromARGB(255, 255, 0, 255), // Bright Magenta
+  final List<Color> _lineColors = [
+    const Color.fromARGB(255, 255, 0, 0), // Bright Red
+    const Color.fromARGB(255, 0, 255, 0), // Bright Green
+    const Color.fromARGB(255, 0, 255, 255), // Bright Cyan
+    const Color.fromARGB(255, 255, 255, 0), // Bright Yellow
+    const Color.fromARGB(255, 255, 0, 255), // Bright Magenta
   ];
   double _sliderValue = 0.0;
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<CsvCubit, List<List<dynamic>>>(
-      builder: (context, data) {
+      builder: (
+        context,
+        data,
+      ) {
         if (data.isEmpty) {
-          return Center(child: Text('No data loaded'));
-        }
-
-        // Initialize the colors
-        if (_lineColors.isEmpty) {
-          for (int i = 1; i < data.first.length; i++) {
-            _lineColors.add(RandomColor().randomColor());
-          }
+          return const Center(
+              child: Text('No data loaded',
+                  style: TextStyle(color: Colors.white)));
         }
 
         int maxVisiblePoints = 100; // Number of points visible at a time
@@ -69,9 +72,11 @@ class _CsvLineChartState extends State<CsvLineChart> {
                     Column(
                       children: List.generate(5, (index) {
                         return DropdownButton<int?>(
+                          dropdownColor: const Color.fromARGB(255, 175, 122, 8),
+                          style: const TextStyle(color: Colors.white),
                           value: selectedVariables[index],
                           items: [
-                            DropdownMenuItem<int?>(
+                            const DropdownMenuItem<int?>(
                               value: null,
                               child: Text('None'),
                             ),
@@ -109,42 +114,50 @@ class _CsvLineChartState extends State<CsvLineChart> {
                               });
                             }
                           },
-                          child: Container(
-                            width: (maxPoints + 1) *
-                                20.0, // Adjust the width based on the data length
-                            height: 400, // Set a fixed height for the chart
-                            color:
-                                Colors.black, // Set background color to black
-                            child: LineChart(
-                              LineChartData(
-                                backgroundColor: Colors
-                                    .black, // Set the background color of the chart
-                                titlesData: FlTitlesData(
-                                  leftTitles: SideTitles(
-                                    showTitles: false,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 16.0),
+                            child: Container(
+                              width: (maxPoints + 1) *
+                                  20.0, // Adjust the width based on the data length
+                              height: 400, // Set a fixed height for the chart
+                              color:
+                                  Colors.black, // Set background color to black
+                              child: LineChart(
+                                LineChartData(
+                                  backgroundColor: Colors
+                                      .black, // Set the background color of the chart
+                                  titlesData: FlTitlesData(
+                                    leftTitles: SideTitles(
+                                      showTitles: true,
+                                      //add getTextStyle to see y axis values
+                                    ),
+                                    bottomTitles: SideTitles(
+                                      showTitles: true,
+                                      getTextStyles: (value) =>
+                                          const TextStyle(color: Colors.white),
+                                    ),
                                   ),
-                                  bottomTitles: SideTitles(
-                                    showTitles: true,
-                                    getTextStyles: (value) =>
-                                        const TextStyle(color: Colors.white),
+                                  gridData: FlGridData(
+                                    show: false, // Disable grid lines
                                   ),
-                                ),
-                                gridData: FlGridData(
-                                  show: false, // Disable grid lines
-                                ),
-                                lineBarsData: _getLineChartBarData(
-                                    data, _sliderValue, maxVisiblePoints),
-                                borderData: FlBorderData(
-                                  show: true,
-                                  border:
-                                      Border.all(color: Colors.grey, width: 1),
-                                ),
-                                minX: _sliderValue,
-                                maxX: _sliderValue + maxVisiblePoints,
-                                minY: minY,
-                                maxY: maxY,
-                                lineTouchData: LineTouchData(
-                                  enabled: false, // Disable touch events
+                                  lineBarsData: _getLineChartBarData(
+                                      data,
+                                      _sliderValue,
+                                      maxVisiblePoints,
+                                      minY,
+                                      maxY),
+                                  borderData: FlBorderData(
+                                    show: false,
+                                    border: Border.all(
+                                        color: Colors.grey, width: 1),
+                                  ),
+                                  minX: _sliderValue,
+                                  maxX: _sliderValue + maxVisiblePoints,
+                                  //minY: -1,
+                                  //maxY: 1,
+                                  lineTouchData: LineTouchData(
+                                    enabled: false, // Disable touch events
+                                  ),
                                 ),
                               ),
                             ),
@@ -161,7 +174,7 @@ class _CsvLineChartState extends State<CsvLineChart> {
               right: 10,
               child: Container(
                 color: Colors.white.withOpacity(0.8),
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -173,9 +186,9 @@ class _CsvLineChartState extends State<CsvLineChart> {
                           0;
                       return Text(
                         '${data[0][variableIndex]}: $value',
-                        style: TextStyle(color: Colors.black),
+                        style: const TextStyle(color: Colors.black),
                       );
-                    }).toList(),
+                    })
                   ],
                 ),
               ),
@@ -186,8 +199,8 @@ class _CsvLineChartState extends State<CsvLineChart> {
     );
   }
 
-  List<LineChartBarData> _getLineChartBarData(
-      List<List<dynamic>> data, double start, int maxVisiblePoints) {
+  List<LineChartBarData> _getLineChartBarData(List<List<dynamic>> data,
+      double start, int maxVisiblePoints, double minY, double maxY) {
     List<LineChartBarData> lineBars = [];
 
     for (int i = 0; i < selectedVariables.length; i++) {
@@ -200,8 +213,12 @@ class _CsvLineChartState extends State<CsvLineChart> {
           j < start.toInt() + maxVisiblePoints && j < data.length;
           j++) {
         spots.add(FlSpot(
+          //key,value
           j.toDouble(),
-          double.tryParse(data[j][variableIndex].toString()) ?? 0,
+          normalizeData(
+              double.tryParse(data[j][variableIndex].toString()) ?? 0,
+              minY,
+              maxY), //check if data element is a double, if not (meaning it a label or string) set it to 0, then normilize
         ));
       }
 
@@ -210,7 +227,7 @@ class _CsvLineChartState extends State<CsvLineChart> {
           spots: spots,
           isCurved: false, // Set to false to make the lines straight
           barWidth: 2,
-          dotData: FlDotData(show: false),
+          dotData: FlDotData(show: true), //ADD SETTINGS TO ENABLE/DISABLE DOTS
           colors: [_lineColors[i]],
           belowBarData: BarAreaData(show: false),
         ),

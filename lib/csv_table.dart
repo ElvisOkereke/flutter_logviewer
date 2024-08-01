@@ -8,7 +8,9 @@ class CsvTable extends StatelessWidget {
     return BlocBuilder<CsvCubit, List<List<dynamic>>>(
       builder: (context, data) {
         if (data.isEmpty) {
-          return Center(child: Text('No data loaded'));
+          return const Center(
+              child: Text('No data loaded',
+                  style: TextStyle(color: Colors.white)));
         }
 
         return SingleChildScrollView(
@@ -16,6 +18,9 @@ class CsvTable extends StatelessWidget {
           child: SingleChildScrollView(
             scrollDirection: Axis.vertical,
             child: DataTable(
+              dataTextStyle: const TextStyle(color: Colors.white),
+              headingTextStyle: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold),
               columns: data.first
                   .map((col) => DataColumn(label: Text(col.toString())))
                   .toList(),

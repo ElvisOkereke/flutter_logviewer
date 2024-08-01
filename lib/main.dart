@@ -34,16 +34,16 @@ class _CsvHomePageState extends State<CsvHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CSV Data Viewer'),
+        title: const Text('DataLogViewer'),
         toolbarHeight: 64,
-        backgroundColor: Colors.blueGrey[900],
+        backgroundColor: const Color.fromARGB(255, 38, 44, 48),
         titleTextStyle: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Color.fromARGB(255, 247, 171, 10)),
         actions: [
           IconButton(
-            icon: Icon(Icons.upload_file),
+            icon: const Icon(Icons.upload_file),
             onPressed: () async {
               final path = await pickFile();
               if (path != null) {
@@ -52,14 +52,17 @@ class _CsvHomePageState extends State<CsvHomePage> {
               }
             },
             tooltip: 'Load CSV',
-            color: Color.fromARGB(255, 247, 171, 10),
+            color: const Color.fromARGB(255, 247, 171, 10),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: DropdownButton<int>(
+              style: const TextStyle(
+                color: Colors.white,
+              ),
               value: _numberOfCharts,
-              dropdownColor: Color.fromARGB(255, 247, 171, 10),
-              iconEnabledColor: Color.fromARGB(255, 247, 171, 10),
+              dropdownColor: const Color.fromARGB(255, 175, 122, 8),
+              iconEnabledColor: const Color.fromARGB(255, 247, 171, 10),
               onChanged: (int? newValue) {
                 setState(() {
                   _numberOfCharts = newValue!;
@@ -76,7 +79,7 @@ class _CsvHomePageState extends State<CsvHomePage> {
         ],
       ),
       body: Container(
-        color: Color.fromARGB(255, 88, 117, 131),
+        color: const Color.fromARGB(255, 59, 73, 80),
         child: LayoutBuilder(
           builder: (context, constraints) {
             return Padding(
