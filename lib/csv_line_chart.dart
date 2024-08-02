@@ -13,10 +13,12 @@ class CsvLineChart extends StatefulWidget {
 //Features to add:
 //1. Calculated Fields
 //2. data legend min/max values
-//3. color match lines and data legend
+//3. color match lines and data legend - In progress
 //4. add cursor to chart
 
-class _CsvLineChartState extends State<CsvLineChart> {
+class _CsvLineChartState extends State<CsvLineChart>
+    with AutomaticKeepAliveClientMixin {
+  //automatic keep alive mixin, added to prevent extra charts from resetting
   List<int?> selectedVariables =
       List.filled(5, null); // Default selected variables to None
   final List<Color> _lineColors = [
@@ -27,6 +29,9 @@ class _CsvLineChartState extends State<CsvLineChart> {
     const Color.fromARGB(255, 255, 0, 255), // Bright Magenta
   ];
   double _sliderValue = 0.0;
+  List<Widget> chartWidgets = [];
+  List<Widget> chartWidgetsMin = [];
+  List<Widget> chartWidgetsMax = [];
 
   @override
   Widget build(BuildContext context) {
@@ -41,27 +46,75 @@ class _CsvLineChartState extends State<CsvLineChart> {
                   style: TextStyle(color: Colors.white)));
         }
 
-        int maxVisiblePoints = 100; // Number of points visible at a time
+        int maxVisiblePoints = 200; // Number of points visible at a time
         int maxPoints = data.length - 1;
 
         // Calculate minY and maxY based on the selected variables
-        double minY = double.infinity;
-        double maxY = double.negativeInfinity;
+        List<double> minY = List.filled(data.length, double.infinity);
+        List<double> maxY = List.filled(data.length, double.negativeInfinity);
         for (int? variableIndex in selectedVariables) {
           if (variableIndex != null) {
-            for (int j = 0; j < data.length; j++) {
-              double value =
-                  double.tryParse(data[j][variableIndex].toString()) ?? 0;
-              if (value < minY) minY = value;
-              if (value > maxY) maxY = value;
+            for (int j = 0; j < data[j].length; j++) {
+              for (int i = 0; i < data.length; i++) {
+                double value = double.tryParse(data[i][j].toString()) ?? 0;
+
+                if (value < minY[j]) minY[j] = value;
+                if (value > maxY[j]) maxY[j] = value;
+                if (minY[j] == double.infinity ||
+                    maxY[j] == double.negativeInfinity) {
+                  minY[j] = 0;
+                  maxY[j] = 1;
+                }
+              }
             }
           }
         }
 
-        if (minY == double.infinity || maxY == double.negativeInfinity) {
-          minY = 0;
-          maxY = 1;
-        }
+        List<LineChartBarData> finalData = _getLineChartBarData(
+            data, _sliderValue, maxVisiblePoints, minY, maxY);
+
+        chartWidgets = [
+          ...selectedVariables.map((variableIndex) {
+            if (variableIndex == null) return Container();
+            double value = double.tryParse(
+                    data[_sliderValue.toInt()][variableIndex].toString()) ??
+                0;
+            return Text(
+              '${data[0][variableIndex]}: $value',
+              style: TextStyle(
+                  fontSize: 14,
+                  color: _lineColors[selectedVariables.indexOf(
+                      variableIndex)]), //chooses color based on color of the respective data line
+            );
+          })
+        ];
+
+        chartWidgetsMax = [
+          ...selectedVariables.map((variableIndex) {
+            if (variableIndex == null) return Container();
+            double value = double.tryParse(maxY[variableIndex].toString()) ?? 0;
+            return Text(
+              '${data[0][variableIndex]}, max: $value',
+              style: TextStyle(
+                  fontSize: 14,
+                  color: _lineColors[selectedVariables.indexOf(
+                      variableIndex)]), //chooses color based on color of the respective data line
+            );
+          })
+        ];
+        chartWidgetsMin = [
+          ...selectedVariables.map((variableIndex) {
+            if (variableIndex == null) return Container();
+            double value = double.tryParse(minY[variableIndex].toString()) ?? 0;
+            return Text(
+              '${data[0][variableIndex]}, min: $value',
+              style: TextStyle(
+                  fontSize: 14,
+                  color: _lineColors[selectedVariables.indexOf(
+                      variableIndex)]), //chooses color based on color of the respective data line
+            );
+          })
+        ];
 
         return Stack(
           children: [
@@ -140,12 +193,7 @@ class _CsvLineChartState extends State<CsvLineChart> {
                                   gridData: FlGridData(
                                     show: false, // Disable grid lines
                                   ),
-                                  lineBarsData: _getLineChartBarData(
-                                      data,
-                                      _sliderValue,
-                                      maxVisiblePoints,
-                                      minY,
-                                      maxY),
+                                  lineBarsData: finalData,
                                   borderData: FlBorderData(
                                     show: false,
                                     border: Border.all(
@@ -170,26 +218,38 @@ class _CsvLineChartState extends State<CsvLineChart> {
               ],
             ),
             Positioned(
-              top: 10,
-              right: 10,
+              top: 0,
+              right: 0,
               child: Container(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.transparent,
                 padding: const EdgeInsets.all(8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ...selectedVariables.map((variableIndex) {
-                      if (variableIndex == null) return Container();
-                      double value = double.tryParse(data[_sliderValue.toInt()]
-                                  [variableIndex]
-                              .toString()) ??
-                          0;
-                      return Text(
-                        '${data[0][variableIndex]}: $value',
-                        style: const TextStyle(color: Colors.black),
-                      );
-                    })
-                  ],
+                  children: chartWidgets,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 295,
+              child: Container(
+                color: Colors.transparent,
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: chartWidgetsMax,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 15,
+              left: 295,
+              child: Container(
+                color: Colors.transparent,
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: chartWidgetsMin,
                 ),
               ),
             ),
@@ -199,8 +259,12 @@ class _CsvLineChartState extends State<CsvLineChart> {
     );
   }
 
-  List<LineChartBarData> _getLineChartBarData(List<List<dynamic>> data,
-      double start, int maxVisiblePoints, double minY, double maxY) {
+  List<LineChartBarData> _getLineChartBarData(
+      List<List<dynamic>> data,
+      double start,
+      int maxVisiblePoints,
+      List<double> minY,
+      List<double> maxY) {
     List<LineChartBarData> lineBars = [];
 
     for (int i = 0; i < selectedVariables.length; i++) {
@@ -217,8 +281,9 @@ class _CsvLineChartState extends State<CsvLineChart> {
           j.toDouble(),
           normalizeData(
               double.tryParse(data[j][variableIndex].toString()) ?? 0,
-              minY,
-              maxY), //check if data element is a double, if not (meaning it a label or string) set it to 0, then normilize
+              minY[variableIndex] * 1.2,
+              maxY[variableIndex] *
+                  1.2), //check if data element is a double, if not (meaning it a label or string) set it to 0, then normilize
         ));
       }
 
@@ -236,4 +301,7 @@ class _CsvLineChartState extends State<CsvLineChart> {
 
     return lineBars;
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
