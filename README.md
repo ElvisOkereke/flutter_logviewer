@@ -6,8 +6,9 @@ feature-wise and I plan to release this as a FREE and OpenSource alternative to 
 DEMO IMAGES:
 ![image](https://github.com/user-attachments/assets/6a8f3be4-bc20-4b36-b537-615eabb3d742)
 
-![image](https://github.com/user-attachments/assets/11803249-307b-4a90-9bf4-b6e9cbdad3b7)
+![image](https://github.com/user-attachments/assets/01bf7a5b-f076-4eed-a8a4-ce942566634b)
 
-![image](https://github.com/user-attachments/assets/6019c392-9cf3-457c-9ce4-d460e9543a48)
+![image](https://github.com/user-attachments/assets/6bb07212-1694-452a-9d92-e34e7b46c4c9)
+
 
 
