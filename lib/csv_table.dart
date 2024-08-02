@@ -14,9 +14,9 @@ class CsvTable extends StatelessWidget {
         }
 
         return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
+          scrollDirection: Axis.vertical,
           child: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
+            scrollDirection: Axis.horizontal,
             child: DataTable(
               dataTextStyle: const TextStyle(color: Colors.white),
               headingTextStyle: const TextStyle(

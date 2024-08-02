@@ -12,9 +12,8 @@ class CsvLineChart extends StatefulWidget {
 }
 //Features to add:
 //1. Calculated Fields
-//2. data legend min/max values
-//3. color match lines and data legend - In progress
-//4. add cursor to chart
+//2. add cursor to chart
+//3. find out why large amount of zeros at the end of the chart
 
 class _CsvLineChartState extends State<CsvLineChart>
     with AutomaticKeepAliveClientMixin {
@@ -32,6 +31,7 @@ class _CsvLineChartState extends State<CsvLineChart>
   List<Widget> chartWidgets = [];
   List<Widget> chartWidgetsMin = [];
   List<Widget> chartWidgetsMax = [];
+  double pointerValue = 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -45,8 +45,16 @@ class _CsvLineChartState extends State<CsvLineChart>
               child: Text('No data loaded',
                   style: TextStyle(color: Colors.white)));
         }
+        if (pointerValue == 0.0 || pointerValue == data[2][5].toDouble()) {
+          pointerValue = double.tryParse(data[2][5].toString()) ?? 0.0;
+        } else {
+          selectedVariables = List.filled(5, null);
+          pointerValue = double.tryParse(data[2][5].toString()) ?? 0.0;
+          _sliderValue = 0.0;
+        }
 
-        int maxVisiblePoints = 200; // Number of points visible at a time
+        double maxVisiblePoints =
+            data.length * 1.03; // Number of points visible at a time
         int maxPoints = data.length - 1;
 
         // Calculate minY and maxY based on the selected variables
@@ -124,29 +132,32 @@ class _CsvLineChartState extends State<CsvLineChart>
                   children: [
                     Column(
                       children: List.generate(5, (index) {
-                        return DropdownButton<int?>(
-                          dropdownColor: const Color.fromARGB(255, 175, 122, 8),
-                          style: const TextStyle(color: Colors.white),
-                          value: selectedVariables[index],
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('None'),
-                            ),
-                            ...List.generate(
-                              data.first.length - 1,
-                              (i) => DropdownMenuItem<int?>(
-                                value: i + 1,
-                                child: Text(data[0][i + 1].toString()),
-                              ),
-                            ),
-                          ],
-                          onChanged: (int? newValue) {
-                            setState(() {
-                              selectedVariables[index] = newValue;
-                            });
-                          },
-                        );
+                        return SizedBox(
+                            width: 210,
+                            child: DropdownButton<int?>(
+                              dropdownColor:
+                                  const Color.fromARGB(255, 175, 122, 8),
+                              style: const TextStyle(color: Colors.white),
+                              value: selectedVariables[index],
+                              items: [
+                                const DropdownMenuItem<int?>(
+                                  value: null,
+                                  child: Text('None'),
+                                ),
+                                ...List.generate(
+                                  data.first.length - 1,
+                                  (i) => DropdownMenuItem<int?>(
+                                    value: i + 1,
+                                    child: Text(data[0][i + 1].toString()),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (int? newValue) {
+                                setState(() {
+                                  selectedVariables[index] = newValue;
+                                });
+                              },
+                            ));
                       }),
                     ),
                     Expanded(
@@ -186,8 +197,8 @@ class _CsvLineChartState extends State<CsvLineChart>
                                     ),
                                     bottomTitles: SideTitles(
                                       showTitles: true,
-                                      getTextStyles: (value) =>
-                                          const TextStyle(color: Colors.white),
+                                      getTextStyles: (value) => const TextStyle(
+                                          color: Colors.white, fontSize: 10),
                                     ),
                                   ),
                                   gridData: FlGridData(
@@ -231,7 +242,7 @@ class _CsvLineChartState extends State<CsvLineChart>
             ),
             Positioned(
               top: 0,
-              left: 295,
+              left: 235,
               child: Container(
                 color: Colors.transparent,
                 padding: const EdgeInsets.all(8),
@@ -243,7 +254,7 @@ class _CsvLineChartState extends State<CsvLineChart>
             ),
             Positioned(
               bottom: 15,
-              left: 295,
+              left: 235,
               child: Container(
                 color: Colors.transparent,
                 padding: const EdgeInsets.all(8),
@@ -262,7 +273,7 @@ class _CsvLineChartState extends State<CsvLineChart>
   List<LineChartBarData> _getLineChartBarData(
       List<List<dynamic>> data,
       double start,
-      int maxVisiblePoints,
+      double maxVisiblePoints,
       List<double> minY,
       List<double> maxY) {
     List<LineChartBarData> lineBars = [];

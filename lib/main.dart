@@ -13,11 +13,10 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: BlocProvider(
-        create: (context) => CsvCubit(),
-        child: CsvHomePage(),
-      ),
+    //make sure provider scope is encompassing this widget tree not just the MaterialApp
+    return BlocProvider(
+      create: (context) => CsvCubit(), // ← create/init your state model
+      child: MaterialApp(home: CsvHomePage()),
     );
   }
 }
@@ -47,11 +46,36 @@ class _CsvHomePageState extends State<CsvHomePage> {
             onPressed: () async {
               final path = await pickFile();
               if (path != null) {
-                final data = await parseCsv(path);
-                context.read<CsvCubit>().loadCsvData(data);
+                try {
+                  final data = await parseCsv(path);
+                  context.read<CsvCubit>().loadCsvData(data);
+                } catch (e) {
+                  _showErrorDialog(context, e.toString());
+                }
               }
             },
             tooltip: 'Load CSV',
+            color: const Color.fromARGB(255, 247, 171, 10),
+          ),
+          IconButton(
+            icon: const Icon(Icons.table_chart),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    backgroundColor: const Color.fromARGB(255, 38, 44, 48),
+                    contentPadding: EdgeInsets.zero,
+                    content: SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.8,
+                      height: MediaQuery.of(context).size.height * 0.8,
+                      child: CsvTable(),
+                    ),
+                  );
+                },
+              );
+            },
+            tooltip: 'Show Table',
             color: const Color.fromARGB(255, 247, 171, 10),
           ),
           Padding(
@@ -88,11 +112,6 @@ class _CsvHomePageState extends State<CsvHomePage> {
                 children: [
                   const SizedBox(height: 16),
                   Expanded(
-                    flex: constraints.maxWidth > 600 ? 1 : 0,
-                    child: CsvTable(),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
                     flex: 2,
                     child: ListView.builder(
                       itemCount: _numberOfCharts,
@@ -113,6 +132,26 @@ class _CsvHomePageState extends State<CsvHomePage> {
           },
         ),
       ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String errorMessage) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(errorMessage),
+          actions: [
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -1,10 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:csv/csv.dart';
-// import 'package:encoding/encoding.dart';
+
+const int maxFileSize = 250 * 1024; // 250KB
 
 Future<List<List<dynamic>>> parseCsv(String path) async {
   final file = File(path);
+
+  // Check the file size
+  final fileSize = await file.length();
+  if (fileSize > maxFileSize) {
+    throw Exception('File size exceeds the limit of 250KB');
+  }
 
   // Try reading the file with different encodings
   String content;
