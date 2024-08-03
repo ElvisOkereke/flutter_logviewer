@@ -64,11 +64,11 @@ class _CsvHomePageState extends State<CsvHomePage> {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    backgroundColor: const Color.fromARGB(255, 38, 44, 48),
+                    backgroundColor: Color.fromARGB(0, 38, 44, 48),
                     contentPadding: EdgeInsets.zero,
                     content: SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.8,
-                      height: MediaQuery.of(context).size.height * 0.8,
+                      width: MediaQuery.of(context).size.width * 0.9,
+                      height: MediaQuery.of(context).size.height * 0.75,
                       child: CsvTable(),
                     ),
                   );
