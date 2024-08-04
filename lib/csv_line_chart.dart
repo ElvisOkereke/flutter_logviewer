@@ -32,6 +32,7 @@ class _CsvLineChartState extends State<CsvLineChart>
   List<Widget> chartWidgetsMin = [];
   List<Widget> chartWidgetsMax = [];
   double pointerValue = 0.0;
+  bool normalize = true;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +47,7 @@ class _CsvLineChartState extends State<CsvLineChart>
                   style: TextStyle(color: Colors.white)));
         }
         if (pointerValue == 0.0 || pointerValue == data[2][5].toDouble()) {
+          //check if user uploaded new data then resets the chart to the beginning
           pointerValue = double.tryParse(data[2][5].toString()) ?? 0.0;
         } else {
           selectedVariables = List.filled(5, null);
@@ -53,9 +55,9 @@ class _CsvLineChartState extends State<CsvLineChart>
           _sliderValue = 0.0;
         }
 
-        double maxVisiblePoints =
-            data.length * 1.03; // Number of points visible at a time
         int maxPoints = data.length - 1;
+        double maxVisiblePoints = max(maxPoints * .15,
+            10); //max visible points on the chart 30% of the data length or 10 points
 
         // Calculate minY and maxY based on the selected variables
         List<double> minY = List.filled(data.length, double.infinity);
@@ -82,6 +84,7 @@ class _CsvLineChartState extends State<CsvLineChart>
             data, _sliderValue, maxVisiblePoints, minY, maxY);
 
         chartWidgets = [
+          //displays the value of the data at the cursor
           ...selectedVariables.map((variableIndex) {
             if (variableIndex == null) return Container();
             double value = double.tryParse(
@@ -98,6 +101,7 @@ class _CsvLineChartState extends State<CsvLineChart>
         ];
 
         chartWidgetsMax = [
+          //displays the max value of the data fields selected
           ...selectedVariables.map((variableIndex) {
             if (variableIndex == null) return Container();
             double value = double.tryParse(maxY[variableIndex].toString()) ?? 0;
@@ -111,6 +115,7 @@ class _CsvLineChartState extends State<CsvLineChart>
           })
         ];
         chartWidgetsMin = [
+          //displays the min value of the data fields selected
           ...selectedVariables.map((variableIndex) {
             if (variableIndex == null) return Container();
             double value = double.tryParse(minY[variableIndex].toString()) ?? 0;
@@ -135,6 +140,7 @@ class _CsvLineChartState extends State<CsvLineChart>
                         return SizedBox(
                             width: 210,
                             child: DropdownButton<int?>(
+                              //dropdown menu for selecting data fields
                               dropdownColor:
                                   const Color.fromARGB(255, 175, 122, 8),
                               style: const TextStyle(color: Colors.white),
@@ -161,62 +167,69 @@ class _CsvLineChartState extends State<CsvLineChart>
                       }),
                     ),
                     Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: GestureDetector(
-                          onTapUp: (details) {
-                            double halfWidth =
-                                MediaQuery.of(context).size.width / 2;
-                            if (details.localPosition.dx > halfWidth) {
+                      child: GestureDetector(
+                        //gesture detector for the  shifting chart
+                        onTapUp: (details) {
+                          double halfWidth =
+                              MediaQuery.of(context).size.width / 2;
+                          if (details.localPosition.dx > halfWidth) {
+                            //print('${_sliderValue},slider');
+                            //print('${maxVisiblePoints},maxVisiblePoints');
+                            //print('${maxPoints},maxPoints');
+                            if (maxPoints.toDouble() -
+                                    maxVisiblePoints.floor() >=
+                                _sliderValue) {
                               setState(() {
                                 _sliderValue = min(
-                                    _sliderValue + 10, maxPoints.toDouble());
-                              });
-                            } else {
-                              setState(() {
-                                _sliderValue = max(_sliderValue - 10, 0);
+                                    _sliderValue + 10,
+                                    maxPoints.toDouble() -
+                                        maxVisiblePoints.floor());
                               });
                             }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 16.0),
-                            child: Container(
-                              width: (maxPoints + 1) *
-                                  20.0, // Adjust the width based on the data length
-                              height: 400, // Set a fixed height for the chart
-                              color:
-                                  Colors.black, // Set background color to black
-                              child: LineChart(
-                                LineChartData(
-                                  backgroundColor: Colors
-                                      .black, // Set the background color of the chart
-                                  titlesData: FlTitlesData(
-                                    leftTitles: SideTitles(
-                                      showTitles: true,
-                                      //add getTextStyle to see y axis values
-                                    ),
-                                    bottomTitles: SideTitles(
-                                      showTitles: true,
-                                      getTextStyles: (value) => const TextStyle(
-                                          color: Colors.white, fontSize: 10),
-                                    ),
+                          } else {
+                            setState(() {
+                              _sliderValue = max(_sliderValue - 10, 0);
+                            });
+                          }
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: Container(
+                            width: (maxPoints
+                                .toDouble()), // Adjust the width based on the data length
+                            height: 400, // Set a fixed height for the chart
+                            color:
+                                Colors.black, // Set background color to black
+                            child: LineChart(
+                              LineChartData(
+                                backgroundColor: Colors
+                                    .black, // Set the background color of the chart
+                                titlesData: FlTitlesData(
+                                  leftTitles: SideTitles(
+                                    showTitles: true,
+                                    //add getTextStyle to see y axis values
                                   ),
-                                  gridData: FlGridData(
-                                    show: false, // Disable grid lines
+                                  bottomTitles: SideTitles(
+                                    showTitles: true,
+                                    getTextStyles: (value) => const TextStyle(
+                                        color: Colors.white, fontSize: 10),
                                   ),
-                                  lineBarsData: finalData,
-                                  borderData: FlBorderData(
-                                    show: false,
-                                    border: Border.all(
-                                        color: Colors.grey, width: 1),
-                                  ),
-                                  minX: _sliderValue,
-                                  maxX: _sliderValue + maxVisiblePoints,
-                                  //minY: -1,
-                                  //maxY: 1,
-                                  lineTouchData: LineTouchData(
-                                    enabled: false, // Disable touch events
-                                  ),
+                                ),
+                                gridData: FlGridData(
+                                  show: false, // Disable grid lines
+                                ),
+                                lineBarsData: finalData,
+                                borderData: FlBorderData(
+                                  show: false,
+                                  border:
+                                      Border.all(color: Colors.grey, width: 1),
+                                ),
+                                minX: _sliderValue,
+                                maxX: _sliderValue + maxVisiblePoints,
+                                //minY: -1,
+                                //maxY: 1,
+                                lineTouchData: LineTouchData(
+                                  enabled: false, // Disable touch events
                                 ),
                               ),
                             ),
@@ -285,17 +298,26 @@ class _CsvLineChartState extends State<CsvLineChart>
       }
       List<FlSpot> spots = [];
       for (int j = start.toInt();
-          j < start.toInt() + maxVisiblePoints && j < data.length;
+          j < start.toInt() + maxVisiblePoints.ceil() && j < data.length;
           j++) {
-        spots.add(FlSpot(
-          //key,value
-          j.toDouble(),
-          normalizeData(
-              double.tryParse(data[j][variableIndex].toString()) ?? 0,
-              minY[variableIndex] * 1.2,
-              maxY[variableIndex] *
-                  1.2), //check if data element is a double, if not (meaning it a label or string) set it to 0, then normilize
-        ));
+        if (normalize == true) {
+          spots.add(FlSpot(
+            //key,value
+            j.toDouble(),
+            normalizeData(
+                double.tryParse(data[j][variableIndex].toString()) ?? 0,
+                minY[variableIndex],
+                maxY[
+                    variableIndex]), //check if data element is a double, if not (meaning it a label or string) set it to 0, then normilize
+          ));
+        } else {
+          spots.add(FlSpot(
+            //key,value
+            j.toDouble(),
+            double.tryParse(data[j][variableIndex].toString()) ?? 0,
+          ));
+        }
+        ;
       }
 
       lineBars.add(

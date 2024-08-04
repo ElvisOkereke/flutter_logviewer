@@ -9,6 +9,7 @@ class CsvTable extends StatefulWidget {
 
 class _CsvTableState extends State<CsvTable> {
   int rowsPerPage = PaginatedDataTable.defaultRowsPerPage;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -36,15 +37,8 @@ class _CsvTableState extends State<CsvTable> {
         }).toList();
 
         return SingleChildScrollView(
-          scrollDirection: Axis.vertical,
           child: Theme(
             data: ThemeData(
-              secondaryHeaderColor: Colors.black,
-              bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-                  backgroundColor: Color.fromARGB(255, 38, 44, 48)),
-              bannerTheme: const MaterialBannerThemeData(
-                  backgroundColor: Color.fromARGB(255, 38, 44, 48)),
-              //textTheme: const TextTheme(caption: TextStyle(color: Colors.white)),
               dataTableTheme: DataTableThemeData(
                 headingRowColor: WidgetStateProperty.resolveWith<Color>(
                     (Set<WidgetState> states) {
@@ -59,24 +53,36 @@ class _CsvTableState extends State<CsvTable> {
                 // Add other customizations here
               ),
             ),
-            child: PaginatedDataTable(
-              footerStyle: const TextStyle(color: Colors.white),
-              headerBackgroundColor: const Color.fromARGB(255, 38, 44, 48),
-              footerBackgroundColor: const Color.fromARGB(255, 38, 44, 48),
-              header:
-                  const Text('CSV Data', style: TextStyle(color: Colors.white)),
-              columns: columns,
-              source: _DataSource(rows),
-              rowsPerPage: rowsPerPage,
-              onRowsPerPageChanged: (perPage) {
-                setState(() {
-                  rowsPerPage = perPage!;
-                });
+            child: GestureDetector(
+              onHorizontalDragUpdate: (details) {
+                if (_scrollController.offset <=
+                        _scrollController.position.maxScrollExtent &&
+                    _scrollController.offset >=
+                        _scrollController.position.minScrollExtent) {
+                  _scrollController
+                      .jumpTo(_scrollController.offset - details.primaryDelta!);
+                }
               },
-              columnSpacing: 16.0,
-              horizontalMargin: 16.0,
-              showCheckboxColumn: false,
-              arrowHeadColor: Colors.white,
+              child: PaginatedDataTable(
+                controller: _scrollController,
+                footerStyle: const TextStyle(color: Colors.white),
+                headerBackgroundColor: const Color.fromARGB(255, 38, 44, 48),
+                footerBackgroundColor: const Color.fromARGB(255, 38, 44, 48),
+                header: const Text('CSV Data',
+                    style: TextStyle(color: Colors.white)),
+                columns: columns,
+                source: _DataSource(rows),
+                rowsPerPage: rowsPerPage,
+                onRowsPerPageChanged: (perPage) {
+                  setState(() {
+                    rowsPerPage = perPage!;
+                  });
+                },
+                columnSpacing: 16.0,
+                horizontalMargin: 16.0,
+                showCheckboxColumn: false,
+                arrowHeadColor: Colors.white,
+              ),
             ),
           ),
         );
